@@ -8,7 +8,7 @@ Mas aqui tem um detalhe especial: os personagens e elementos do jogo foram desen
 
 🎮 Quer jogar?
 
-👉 🚀 CLIQUE AQUI E DIVIRTA-SE!
+👉 🚀 CLIQUE NA URL AO LADO E DIVIRTA-SE https://rodrigocriadorbnu.github.io/Paint-Attack/
 
 Ao entrar no jogo, você pode:
 
