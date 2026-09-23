@@ -1,0 +1,642 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paint Clássico</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+        font-size: 12px;
+        background: #c0c0c0;
+    }
+
+    /* =========================
+       BARRA DE TÍTULO
+       ========================= */
+
+    .title-bar {
+        height: 26px;
+        background: linear-gradient(
+            to right,
+            #000080,
+            #1084d7
+        );
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 0 5px;
+        font-weight: bold;
+        user-select: none;
+    }
+
+    .paint-icon {
+        width: 16px;
+        height: 16px;
+        margin-right: 6px;
+        background:
+            linear-gradient(135deg, #fff 0 35%, transparent 35%),
+            #008080;
+        border: 1px solid #fff;
+    }
+
+    .title {
+        flex: 1;
+    }
+
+    .window-buttons {
+        display: flex;
+        gap: 2px;
+    }
+
+    .window-button {
+        width: 20px;
+        height: 18px;
+        background: #c0c0c0;
+        color: black;
+        border: 1px solid white;
+        border-right-color: #404040;
+        border-bottom-color: #404040;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+    }
+
+    /* =========================
+       MENU
+       ========================= */
+
+    .menu-bar {
+        height: 25px;
+        display: flex;
+        align-items: center;
+        background: #c0c0c0;
+        border-bottom: 1px solid #808080;
+        padding-left: 4px;
+        user-select: none;
+    }
+
+    .menu-item {
+        padding: 4px 9px;
+        height: 24px;
+    }
+
+    .menu-item:hover {
+        background: #000080;
+        color: white;
+    }
+
+    /* =========================
+       ÁREA PRINCIPAL
+       ========================= */
+
+    .main {
+        display: flex;
+        height: calc(100vh - 51px);
+    }
+
+    /* =========================
+       BARRA DE FERRAMENTAS
+       ========================= */
+
+    .tools {
+        width: 58px;
+        background: #c0c0c0;
+        border-right: 1px solid #808080;
+        padding: 5px;
+    }
+
+    .tool-grid {
+        display: grid;
+        grid-template-columns: 23px 23px;
+        gap: 3px;
+    }
+
+    .tool {
+        width: 23px;
+        height: 23px;
+        padding: 0;
+        background: #c0c0c0;
+        border: 1px solid #fff;
+        border-right-color: #404040;
+        border-bottom-color: #404040;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .tool.active {
+        border: 1px solid #404040;
+        border-right-color: white;
+        border-bottom-color: white;
+        background: #a0a0a0;
+    }
+
+    /* =========================
+       ÁREA DO CANVAS
+       ========================= */
+
+    .canvas-area {
+        flex: 1;
+        background: #808080;
+        padding: 15px;
+        overflow: auto;
+    }
+
+    .canvas-wrapper {
+        background: white;
+        border: 1px solid #404040;
+        width: 100%;
+        height: 100%;
+        min-width: 400px;
+        min-height: 300px;
+        position: relative;
+    }
+
+    canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        background: white;
+        cursor: crosshair;
+    }
+
+    /* =========================
+       PAINEL LATERAL DIREITO
+       ========================= */
+
+    .right-panel {
+        width: 175px;
+        background: #c0c0c0;
+        border-left: 1px solid #808080;
+        padding: 8px;
+    }
+
+    .preview {
+        height: 80px;
+        border: 2px inset #fff;
+        background: #c0c0c0;
+        margin-bottom: 12px;
+        position: relative;
+    }
+
+    .color-main {
+        width: 38px;
+        height: 38px;
+        background: black;
+        position: absolute;
+        left: 15px;
+        top: 10px;
+        border: 1px solid #000;
+    }
+
+    .color-secondary {
+        width: 38px;
+        height: 38px;
+        background: white;
+        position: absolute;
+        left: 35px;
+        top: 28px;
+        border: 1px solid #000;
+    }
+
+    .new-game {
+        width: 100%;
+        margin-top: 12px;
+        padding: 6px 5px;
+        background: #c0c0c0;
+        border: 2px outset #fff;
+        font-family: inherit;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    .new-game:active {
+        border: 2px inset #fff;
+    }
+
+    /* =========================
+       PALETA
+       ========================= */
+
+    .palette-title {
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .palette {
+        display: grid;
+        grid-template-columns: repeat(4, 22px);
+        gap: 4px;
+    }
+
+    .color {
+        width: 22px;
+        height: 22px;
+        border: 2px outset #fff;
+        cursor: pointer;
+    }
+
+    .color:active {
+        border: 2px inset #fff;
+    }
+
+    /* =========================
+       STATUS BAR
+       ========================= */
+
+    .status {
+        position: fixed;
+        bottom: 0;
+        left: 58px;
+        right: 175px;
+        height: 22px;
+        background: #c0c0c0;
+        border-top: 1px solid #808080;
+        display: flex;
+        align-items: center;
+        padding-left: 6px;
+    }
+
+    /* =========================
+       BOTÃO ADICIONAR
+       ========================= */
+
+    .add-new {
+        margin-top: 15px;
+        width: 100%;
+        background: #c0c0c0;
+        border: 2px outset #fff;
+        padding: 7px 4px;
+        font-family: inherit;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .add-new:active {
+        border: 2px inset #fff;
+    }
+
+    @media (max-width: 700px) {
+        .right-panel {
+            display: none;
+        }
+
+        .status {
+            right: 0;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<!-- =========================
+     TÍTULO
+     ========================= -->
+
+<div class="title-bar">
+
+    <div class="paint-icon"></div>
+
+    <div class="title">
+        Paint
+    </div>
+
+    <div class="window-buttons">
+        <div class="window-button">_</div>
+        <div class="window-button">□</div>
+        <div class="window-button">×</div>
+    </div>
+
+</div>
+
+
+<!-- =========================
+     MENU
+     ========================= -->
+
+<div class="menu-bar">
+
+    <div class="menu-item">
+        <u>A</u>rquivo
+    </div>
+
+    <div class="menu-item">
+        <u>E</u>ditar
+    </div>
+
+    <div class="menu-item">
+        <u>E</u>xibir
+    </div>
+
+    <div class="menu-item">
+        <u>I</u>magem
+    </div>
+
+    <div class="menu-item">
+        <u>C</u>ores
+    </div>
+
+    <div class="menu-item">
+        <u>A</u>juda
+    </div>
+
+</div>
+
+
+<!-- =========================
+     PRINCIPAL
+     ========================= -->
+
+<div class="main">
+
+    <!-- FERRAMENTAS -->
+
+    <aside class="tools">
+
+        <div class="tool-grid">
+
+            <!-- Lápis funcional -->
+            <button
+                class="tool active"
+                title="Lápis">
+                ✎
+            </button>
+
+            <button class="tool">▰</button>
+            <button class="tool">▣</button>
+            <button class="tool">◯</button>
+            <button class="tool">⌁</button>
+            <button class="tool">╱</button>
+            <button class="tool">▱</button>
+            <button class="tool">⬡</button>
+            <button class="tool">✂</button>
+            <button class="tool">⌫</button>
+            <button class="tool">A</button>
+            <button class="tool">●</button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- CANVAS -->
+
+    <section class="canvas-area">
+
+        <div class="canvas-wrapper">
+
+            <canvas id="paintCanvas"></canvas>
+
+        </div>
+
+    </section>
+
+
+    <!-- PAINEL DIREITO -->
+
+    <aside class="right-panel">
+
+        <div class="preview">
+
+            <div
+                class="color-main"
+                id="currentColor">
+            </div>
+
+            <div class="color-secondary"></div>
+
+        </div>
+
+
+        <div class="palette-title">
+            Cores
+        </div>
+
+
+        <div class="palette">
+
+            <div class="color" style="background:#000000" data-color="#000000"></div>
+            <div class="color" style="background:#ffffff" data-color="#ffffff"></div>
+            <div class="color" style="background:#808080" data-color="#808080"></div>
+            <div class="color" style="background:#c0c0c0" data-color="#c0c0c0"></div>
+
+            <div class="color" style="background:#800000" data-color="#800000"></div>
+            <div class="color" style="background:#ff0000" data-color="#ff0000"></div>
+            <div class="color" style="background:#808000" data-color="#808000"></div>
+            <div class="color" style="background:#ffff00" data-color="#ffff00"></div>
+
+            <div class="color" style="background:#008000" data-color="#008000"></div>
+            <div class="color" style="background:#00ff00" data-color="#00ff00"></div>
+            <div class="color" style="background:#008080" data-color="#008080"></div>
+            <div class="color" style="background:#00ffff" data-color="#00ffff"></div>
+
+            <div class="color" style="background:#000080" data-color="#000080"></div>
+            <div class="color" style="background:#0000ff" data-color="#0000ff"></div>
+            <div class="color" style="background:#800080" data-color="#800080"></div>
+            <div class="color" style="background:#ff00ff" data-color="#ff00ff"></div>
+
+        </div>
+
+
+        <!-- BOTÃO DO JOGO -->
+
+        <button
+            class="add-new"
+            id="addNew">
+            Novo Jogo
+        </button>
+
+    </aside>
+
+</div>
+
+
+<!-- STATUS -->
+
+<div class="status">
+    Lápis selecionado
+</div>
+
+
+<script>
+
+    /* =========================================
+       CONFIGURAÇÃO DA URL DO JOGO
+       ========================================= */
+
+    const GAME_URL = "game.html";
+
+
+    /* =========================================
+       CANVAS
+       ========================================= */
+
+    const canvas = document.getElementById("paintCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let drawing = false;
+    let currentColor = "#000000";
+
+
+    function resizeCanvas() {
+
+        const rect = canvas.getBoundingClientRect();
+
+        const oldCanvas = document.createElement("canvas");
+
+        oldCanvas.width = canvas.width;
+        oldCanvas.height = canvas.height;
+
+        if (canvas.width > 0 && canvas.height > 0) {
+            oldCanvas
+                .getContext("2d")
+                .drawImage(canvas, 0, 0);
+        }
+
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = currentColor;
+
+        if (oldCanvas.width > 0) {
+            ctx.drawImage(
+                oldCanvas,
+                0,
+                0,
+                oldCanvas.width,
+                oldCanvas.height,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+        }
+    }
+
+
+    function getPosition(event) {
+
+        const rect = canvas.getBoundingClientRect();
+
+        return {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
+        };
+    }
+
+
+    /* =========================================
+       DESENHO COM MOUSE
+       ========================================= */
+
+    canvas.addEventListener("mousedown", function(event) {
+
+        drawing = true;
+
+        const pos = getPosition(event);
+
+        ctx.beginPath();
+
+        ctx.moveTo(pos.x, pos.y);
+
+        ctx.strokeStyle = currentColor;
+    });
+
+
+    canvas.addEventListener("mousemove", function(event) {
+
+        if (!drawing) {
+            return;
+        }
+
+        const pos = getPosition(event);
+
+        ctx.lineTo(pos.x, pos.y);
+
+        ctx.stroke();
+
+    });
+
+
+    canvas.addEventListener("mouseup", stopDrawing);
+    canvas.addEventListener("mouseleave", stopDrawing);
+
+
+    function stopDrawing() {
+
+        drawing = false;
+
+        ctx.closePath();
+    }
+
+
+    /* =========================================
+       CORES
+       ========================================= */
+
+    document
+        .querySelectorAll(".color")
+        .forEach(function(color) {
+
+            color.addEventListener("click", function() {
+
+                currentColor = this.dataset.color;
+
+                document
+                    .getElementById("currentColor")
+                    .style.background = currentColor;
+
+                ctx.strokeStyle = currentColor;
+
+            });
+
+        });
+
+
+    /* =========================================
+       BOTÃO "ADICIONAR E NOVO"
+       ========================================= */
+
+    document
+        .getElementById("addNew")
+        .addEventListener("click", function() {
+
+            window.location.href = GAME_URL;
+
+        });
+
+
+    /* =========================================
+       RESPONSIVIDADE
+       ========================================= */
+
+    window.addEventListener(
+        "resize",
+        resizeCanvas
+    );
+
+
+    resizeCanvas();
+
+</script>
+
+</body>
+</html>
+
